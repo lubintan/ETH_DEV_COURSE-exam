@@ -27,7 +27,7 @@ contract RoutePriceHolderI {
      * @param exitBooth The address of the exit booth of the route set.
      * @param priceWeis The price in weis of the new route.
      * @return Whether the action was successful.
-     * Emits LogPriceSet with:
+     * Emits LogRoutePriceSet with:
      *     The sender of the action.
      *     The address of the entry booth.
      *     The address of the exit booth.

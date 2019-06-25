@@ -49,22 +49,18 @@ contract("TollBoothOperator", function(accounts) {
     describe("deploy", function() {
 
         it("should not be possible to deploy a TollBoothOperator with deposit 0 - 1", async function() {
-            this.test.b9Points = 0;
-            this.test.b9MustPass = "failsCode";
             return expectedExceptionPromise(
                 () => TollBoothOperator.new(false, 0, owner0, { from: owner1, gas: maxGas }),
                 maxGas);
-        });
+        }).setB9Points(0).setB9MustPass("failsCode");
 
         it("should be possible to deploy a TollBoothOperator with parameters - 1", async function() {
-            this.test.b9Points = 0;
-            this.test.b9MustPass = "failsCode";
             const operator = await TollBoothOperator.new(false, deposit0, owner0, { from: owner1 });
             assert.isFalse(await operator.isPaused());
             assert.strictEqual((await operator.getDeposit()).toNumber(), deposit0);
             assert.strictEqual(await operator.getOwner(), owner1);
             assert.strictEqual(await operator.getRegulator(), owner0);
-        });
+        }).setB9Points(0).setB9MustPass("failsCode");
 
     });
 
@@ -92,19 +88,15 @@ contract("TollBoothOperator", function(accounts) {
         describe("enterRoad", function() {
 
             it("should not be possible to enter road if paused", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 await operator.setPaused(true, { from: owner1 });
                 await expectedExceptionPromise(
                     () => operator.enterRoad(
                         booth0, hashed0,
                         { from: vehicle0, value: deposit0 * multiplier0, gas: maxGas }),
                     maxGas);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
             it("should be possible to enter road with more than required deposit", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 const success = await operator.enterRoad.call(
                         booth0, hashed0, { from: vehicle0, value: (deposit0 * multiplier0) + 1 });
                 assert.isTrue(success);
@@ -130,7 +122,7 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(operatorBal, (deposit0 * multiplier0 + 1).toString());
                 assert.strictEqual(collected.toNumber(), 0);
                 assert.strictEqual(vehicle0Due.toNumber(), 0);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
         });
 
@@ -146,8 +138,6 @@ contract("TollBoothOperator", function(accounts) {
             });
 
             it("should be possible to report exit road on route with known price below deposited", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 await operator.setRoutePrice(booth0, booth1, deposit0, { from: owner1 });
                 const result = await operator.reportExitRoad.call(secret0, { from: booth1 });
                 assert.strictEqual(result.toNumber(), 1);
@@ -177,11 +167,9 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(collected.toNumber(), deposit0 * multiplier0);
                 assert.strictEqual(vehicle0Due.toNumber(), extraDeposit * multiplier0);
                 assert.strictEqual(vehicle0Bal, vehicleInitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
             it("should be possible to report exit road on route with unknown price", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 const result = await operator.reportExitRoad.call(secret0, { from: booth2 });
                 assert.strictEqual(result.toNumber(), 2);
                 const txObj = await operator.reportExitRoad(secret0, { from: booth2 });
@@ -209,7 +197,7 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(collected.toNumber(), 0);
                 assert.strictEqual(vehicle0Due.toNumber(), 0);
                 assert.strictEqual(vehicle0Bal, vehicleInitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
         });
 
@@ -227,8 +215,6 @@ contract("TollBoothOperator", function(accounts) {
             });
 
             it("should be possible to report exit road on route with known price below deposited", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 await operator.setRoutePrice(booth0, booth1, deposit0 - 1, { from: owner1 });
                 const result = await operator.reportExitRoad.call(secret0, { from: booth1 });
                 assert.strictEqual(result.toNumber(), 1);
@@ -258,11 +244,9 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(collected.toNumber(), (deposit0 - 1) * multiplier0);
                 assert.strictEqual(vehicle0Due.toNumber(), multiplier0);
                 assert.strictEqual(vehicle0Bal, vehicleInitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
             it("should be possible to report exit road on route with unknown price", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 const result = await operator.reportExitRoad.call(secret0, { from: booth2 });
                 assert.strictEqual(result.toNumber(), 2);
                 const txObj = await operator.reportExitRoad(secret0, { from: booth2 });
@@ -290,7 +274,7 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(collected.toNumber(), 0);
                 assert.strictEqual(vehicle0Due.toNumber(), 0);
                 assert.strictEqual(vehicle0Bal, vehicleInitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
         });
 
@@ -312,8 +296,6 @@ contract("TollBoothOperator", function(accounts) {
             });
 
             it("should be possible to set the base route price below both deposits and reduce count by 1", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 const success = await operator.setRoutePrice.call(booth0, booth2, deposit0, { from: owner1 });
                 assert.isTrue(success);
                 const txObj = await operator.setRoutePrice(booth0, booth2, deposit0, { from: owner1 });
@@ -361,11 +343,9 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(vehicle1Due.toNumber(), (extraDeposit1 - deposit0) * multiplier1);
                 assert.strictEqual(vehicle0Bal, vehicle0InitBal);
                 assert.strictEqual(vehicle1Bal, vehicle1InitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
             it("should be possible to set the base route price above both deposits and reduce count by 1", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 const success = await operator.setRoutePrice.call(booth0, booth2, extraDeposit0 + extraDeposit1, { from: owner1 });
                 assert.isTrue(success);
                 const txObj = await operator.setRoutePrice(booth0, booth2, extraDeposit0 + extraDeposit1, { from: owner1 });
@@ -411,13 +391,11 @@ contract("TollBoothOperator", function(accounts) {
                 assert.strictEqual(vehicle1Due.toNumber(), 0);
                 assert.strictEqual(vehicle0Bal, vehicle0InitBal);
                 assert.strictEqual(vehicle1Bal, vehicle1InitBal);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
             describe("Clear one more pending payment", function() {
 
                 it("should be possible to set the base route price below both deposits then clear the second by hand", async function() {
-                    this.test.b9Points = 0;
-                    this.test.b9MustPass = "failsCode";
                     await operator.setRoutePrice(booth0, booth2, deposit0, { from: owner1 });
                     const success = await operator.clearSomePendingPayments.call(booth0, booth2, 1, { from: owner0 });
                     assert.isTrue(success);
@@ -460,7 +438,7 @@ contract("TollBoothOperator", function(accounts) {
                     assert.strictEqual(vehicle1Due.toNumber(), (extraDeposit1 - deposit0) * multiplier1);
                     assert.strictEqual(vehicle0Bal, vehicle0InitBal);
                     assert.strictEqual(vehicle1Bal, vehicle1InitBal);
-                });
+                }).setB9Points(0).setB9MustPass("failsCode");
 
             });
 
@@ -478,8 +456,6 @@ contract("TollBoothOperator", function(accounts) {
             });
 
             it("should be possible to withdraw if second vehicle has exited", async function() {
-                this.test.b9Points = 0;
-                this.test.b9MustPass = "failsCode";
                 await operator.reportExitRoad(secret1, { from: booth1 });
                 const txObj = await operator.withdrawPayment({ from: owner1, gasPrice: gasPrice });
                 assert.strictEqual(txObj.receipt.logs.length, 1);
@@ -502,7 +478,7 @@ contract("TollBoothOperator", function(accounts) {
                     toBN(owner1InitBal).add(toBN(price01 * multiplier1)).sub(toBN(txObj.receipt.gasUsed * gasPrice)).toString(10));
                 assert.strictEqual(vehicle0Due.toNumber(), 0);
                 assert.strictEqual(vehicle1Due.toNumber(), (deposit0 - price01) * multiplier1);
-            });
+            }).setB9Points(0).setB9MustPass("failsCode");
 
         });
 
@@ -511,7 +487,6 @@ contract("TollBoothOperator", function(accounts) {
             const count = 45; // Multiple of 15, but at least a 45
 
             it("should cost proportional gas to clear pending 1 by 1, 2 by 2 or 3 by 3", async function() {
-                this.test.b9Points = 0; // But for real, a lot.
                 // Prime storage
                 const hashedB0 = await operator.hashSecret(padLeft(99, 64));
                 await operator.enterRoad(booth0, hashedB0, { from: vehicle0, value: deposit0 * multiplier0 });
@@ -552,15 +527,13 @@ contract("TollBoothOperator", function(accounts) {
                     latestDiff = diff2a;
                 }
                 console.log("Single 2-incremental clear pending gas cost", latestDiff);
-            });
+            }).setB9Points(0 /* But for real, a lot */);
 
         });
 
     });
 
     it("should have correct number of functions", async function() {
-        this.test.b9Points = 0;
-        this.test.b9MustPass = "failsCode";
         const instance = await TollBoothOperator.new(true, deposit1, owner0, { from: owner0 });
         assert.strictEqual(Object.keys(instance).length, 45);
         // ['constructor','abi','methods','contract','removeTollBooth','setOwner','setPaused','addTollBooth',
@@ -571,6 +544,6 @@ contract("TollBoothOperator", function(accounts) {
         // 'hashSecret','enterRoad','getVehicleEntry','reportExitRoad','getPendingPaymentCount','setRoutePrice',
         // 'clearSomePendingPayments','withdrawPayment','sendTransaction','send','allEvents','getPastEvents',
         // 'address','transactionHash']
-    });
+    }).setB9Points(0).setB9MustPass("failsCode");
 
 });

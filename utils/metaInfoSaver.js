@@ -1,4 +1,18 @@
 module.exports = function configureMetaInfoSaver(fs) {
+    Object.prototype.setB9Points = function setB9Points(points) {
+        if (typeof points != "number") {
+            throw new Error("points must a number, not " + typeof points);
+        }
+        Object.assign(this, { b9Points:  points });
+        return this;
+    };
+    Object.prototype.setB9MustPass = function setB9MustPass(mustPass) {
+        if (mustPass != "failsCode") {
+            throw new Error("mustPass must be failsCode, not " + mustPass);
+        }
+        Object.assign(this, { b9MustPass: mustPass });
+        return this;
+    }
     const validMustPass = {
         failsCode: "Failing this test fails the whole coding part",
         failsFile: "Failing this test fails the test file"
@@ -23,6 +37,8 @@ module.exports = function configureMetaInfoSaver(fs) {
             intoObj[test.title].state = test.state;
             if (test.state == "failed") {
                 intoObj[test.title].error = test.err.stack;
+            } else if (typeof intoObj[test.title].state == "undefined") {
+                intoObj[test.title].state = "failed";
             }
         });
         suite.suites.forEach(suite => {

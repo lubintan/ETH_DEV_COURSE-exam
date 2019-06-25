@@ -47,8 +47,6 @@ contract("MultiplierHolder - stress", function(accounts) {
             const count = 15;
 
             it("should cost the same gas to set multiplier on successive types", async function() {
-                this.test.b9Points = 3;
-                this.test.b9MustPass = "failsCode";
                 const txObjs = [];
                 // We start at 31 just in case the student mistakenly set values in the constructor in the low
                 // vehicle types
@@ -59,11 +57,9 @@ contract("MultiplierHolder - stress", function(accounts) {
                 for (let i = 1; i <= count - 1; i++) {
                     assert.strictEqual(txObjs[i].receipt.gasUsed, expectedGasUsed);
                 }
-            });
+            }).setB9Points(3).setB9MustPass("failsCode");
 
             it("should cost the same gas to unset multiplier on successive types", async function() {
-                this.test.b9Points = 5;
-                this.test.b9MustPass = "failsCode";
                 for (let i = 1; i <= count; i++) {
                     await holder.setMultiplier.sendTransaction(i, 2 * i, { from: owner0 });
                 }
@@ -75,7 +71,7 @@ contract("MultiplierHolder - stress", function(accounts) {
                 for (let i = 1; i <= count - 1; i++) {
                     assert.strictEqual(txObjs[i].receipt.gasUsed, expectedGasUsed);
                 }
-            });
+            }).setB9Points(5).setB9MustPass("failsCode");
 
         });
 
