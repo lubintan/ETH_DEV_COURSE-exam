@@ -21,6 +21,7 @@ contract PullPaymentA {
      *     It should roll back if the caller has 0 to withdraw.
      *     It should use the `.call.value` syntax and not limit the gas passed.
      *     Tests will use GreedyRecipient.sol to make sure a lot of gas is passed.
+     *     Under no circumstances should it ever burn Ethers.
      * @return Whether the action was successful.
      * Emits LogPaymentWithdrawn with:
      *     The sender of the action, to which the payment is sent.
