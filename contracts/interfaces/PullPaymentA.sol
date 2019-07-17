@@ -20,6 +20,7 @@ contract PullPaymentA {
      * Called by anyone that is owed a payment.
      *     It should roll back if the caller has 0 to withdraw.
      *     It should use the `.call.value` syntax and not limit the gas passed.
+     *     It should roll back if the recipient rejects the funds.
      *     Tests will use GreedyRecipient.sol to make sure a lot of gas is passed.
      *     Under no circumstances should it ever burn Ethers.
      * @return Whether the action was successful.
