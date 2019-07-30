@@ -6,9 +6,5 @@ module.exports = {
             network_id: "*", // Match any network id
             gas: 15000000
         }
-    },
-    mocha: {
-        reporter: "json",
-        slow: 500
     }
 };
