@@ -23,7 +23,7 @@ contract Regulator is Owned, RegulatorI{
 
         emit LogVehicleTypeSet(msg.sender, vehicle, vehicleType);
 
-        success =true;
+        success = true;
     }
 
     function getVehicleType(address vehicle)

@@ -7,7 +7,7 @@ contract PullPayment is PullPaymentA {
 
     using SafeMath for uint;
 
-    mapping (address => uint) internal owed;
+    mapping (address => uint) internal balances;
 
     constructor() public {}
 
@@ -22,10 +22,10 @@ contract PullPayment is PullPaymentA {
         public
         returns(bool success)
     {
-        uint amount = owed[msg.sender];
+        uint amount = balances[msg.sender];
         require(amount > 0, "Nothing to withdraw.");
 
-        owed[msg.sender] = 0;
+        balances[msg.sender] = 0;
         emit LogPaymentWithdrawn(msg.sender, amount);
 
         asyncPayTo(msg.sender, amount);
@@ -38,7 +38,7 @@ contract PullPayment is PullPaymentA {
         public
         returns(uint weis)
     {
-        weis = owed[whose];
+        weis = balances[whose];
     }
 
 }
