@@ -9,7 +9,7 @@ contract Regulator is Owned, RegulatorI{
     mapping (address => uint) private vehicleMap;
     mapping (address => bool) private tollBoothOperatorMap;
 
-    constructor () internal {}
+    constructor() public {}
 
     function setVehicleType(address vehicle, uint vehicleType)
         public
@@ -41,7 +41,7 @@ contract Regulator is Owned, RegulatorI{
     {
         require(!tollBoothOperatorMap[owner], "Operator exists.");
 
-        TollBoothOperator newTollBoothOperator = new TollBoothOperator(false, deposit, address(this));
+        TollBoothOperator newTollBoothOperator = new TollBoothOperator(true, deposit, address(this));
 
         require(newTollBoothOperator.setOwner(owner), "Unable to set ownership to intended owner.");
 

@@ -7,8 +7,8 @@ contract DepositHolder is Owned, DepositHolderI {
 
     uint private deposit;
 
-    constructor (uint initialDeposit) 
-        internal
+    constructor (uint initialDeposit)
+        public
     {
         require(initialDeposit > 0, "Cannot set deposit to nothing.");
         deposit = initialDeposit;

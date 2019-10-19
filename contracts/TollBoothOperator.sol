@@ -3,13 +3,12 @@ pragma solidity ^0.5.0;
 import './interfaces/TollBoothOperatorI.sol';
 import './Pausable.sol';
 import './DepositHolder.sol';
-// import './TollBoothHolder.sol';
 import './MultiplierHolder.sol';
 import './RoutePriceHolder.sol';
 import './Regulated.sol';
 import './PullPayment.sol';
 
-contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder, MultiplierHolder,
+contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder,
                                 RoutePriceHolder, Regulated, PullPayment, TollBoothOperatorI {
 
     using SafeMath for uint;
@@ -29,8 +28,8 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
         bytes32[] pendingList;
     }
 
-    mapping(bytes32 => VehEntryInfo) vehEntryMap;
-    mapping(address => mapping(address => PendingPayments)) pendingPaymentsMap;
+    mapping(bytes32 => VehEntryInfo) private vehEntryMap;
+    mapping(address => mapping(address => PendingPayments)) private pendingPaymentsMap;
 
     constructor (bool paused, uint initialDeposit, address initialRegulator)
         public
@@ -39,10 +38,10 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
         Regulated(initialRegulator)
     {}
 
-    function() 
-        external 
+    function()
+        external
     {
-        revert();
+        revert('Reject incoming calls.');
     }
 
     function hashSecret(bytes32 secret)
@@ -67,14 +66,14 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
         require(multiplier > 0, "Vehicle not allowed ont his road system.");
         require(isTollBooth(entryBooth), "Toll booth is not registered.");
         require(msg.value >= (deposit.mul(multiplier)), "Not enough deposit sent.");
-        require(vehEntryMap[exitSecretHashed].vehicle == address(0), "This hash has been used before.");
+        require(vehEntryMap[exitSecretHashed].entryBooth == address(0), "This hash has been used before.");
 
         vehEntryMap[exitSecretHashed].vehicle = msg.sender;
         vehEntryMap[exitSecretHashed].entryBooth = entryBooth;
         vehEntryMap[exitSecretHashed].multiplier = multiplier;
         vehEntryMap[exitSecretHashed].depositedWeis = msg.value;
 
-        emit LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, multiplier, deposit);
+        emit LogRoadEntered(msg.sender, entryBooth, exitSecretHashed, multiplier, msg.value);
 
         success = true;
     }
@@ -117,21 +116,22 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
         if (fee == 0) {
             require(insert(entryBooth, msg.sender, exitSecretHashed), "Adding pending payment to queue failed.");
             emit LogPendingPayment(exitSecretHashed, entryBooth, msg.sender);
-            status = 2;
+            return 2;
         } else {
             if (fee >= paidDeposit){
                 vehEntryMap[exitSecretHashed].depositedWeis = 0;
-                owed[owner]  = owed[owner].add(paidDeposit);
+                owed[owner] = owed[owner].add(paidDeposit);
+                emit LogRoadExited(msg.sender, exitSecretHashed, paidDeposit, 0);
             } else { // (fee < paidDeposit) {
                 owed[vehicle] = owed[vehicle].add(paidDeposit.sub(fee));
-                owed[owner]  = owed[owner].add(fee);
+                owed[owner] = owed[owner].add(fee);
+                emit LogRoadExited(msg.sender, exitSecretHashed, fee, paidDeposit.sub(fee));
             }
 
-            emit LogRoadExited(msg.sender, exitSecretHashed, fee, paidDeposit.sub(fee));
             status = 1;
         }
 
-        vehEntryMap[exitSecretHashed].entryBooth = address(0);
+        vehEntryMap[exitSecretHashed].vehicle = address(0);
         vehEntryMap[exitSecretHashed].multiplier = 0;
         vehEntryMap[exitSecretHashed].depositedWeis = 0;
     }
@@ -169,7 +169,12 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
         returns(bool success)
     {
         require(RoutePriceHolder.setRoutePrice(entryBooth, exitBooth, priceWeis), "Could not set route price.");
-        require(remove(entryBooth, exitBooth, 1, priceWeis), "Clearing 1 pending payment failed.");
+
+        uint pendingPaymentsCount = pendingPaymentsMap[entryBooth][exitBooth].length;
+        if (pendingPaymentsCount > 0){
+            require(remove(entryBooth, exitBooth, 1, priceWeis), "Clearing 1 pending payment failed.");
+            pendingPaymentsMap[entryBooth][exitBooth].length = pendingPaymentsCount.sub(1);
+        }
 
         success = true;
     }
@@ -186,7 +191,7 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
 
     // Methods for handling the Pending Payments Queue
     function insert(address enter, address exit, bytes32 exitSecretHashed)
-        internal
+        private
         returns (bool success)
     {
         pendingPaymentsMap[enter][exit].pendingList.push(exitSecretHashed);
@@ -194,9 +199,9 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
 
         success = true;
     }
-    
+
     function remove(address enter, address exit, uint count, uint baseRoutePrice)
-        internal
+        private
         returns (bool success)
     {
         uint currentHead = pendingPaymentsMap[enter][exit].head;
@@ -212,37 +217,26 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, TollBoothHolder,
             if (fee >= paidDeposit){
                 vehEntryMap[exitSecretHashed].depositedWeis = 0;
                 owed[owner] = owed[owner].add(paidDeposit);
+                emit LogRoadExited(exit, exitSecretHashed, paidDeposit, 0);
             } else { // (fee < paidDeposit) {
                 address vehicle = vehEntryMap[exitSecretHashed].vehicle;
                 owed[vehicle] = owed[vehicle].add(paidDeposit.sub(fee));
                 owed[owner] = owed[owner].add(fee);
+                emit LogRoadExited(exit, exitSecretHashed, fee, paidDeposit.sub(fee));
             }
 
-            emit LogRoadExited(exit, exitSecretHashed, fee, paidDeposit.sub(fee));
-
-            vehEntryMap[exitSecretHashed].entryBooth = address(0);
+            vehEntryMap[exitSecretHashed].vehicle = address(0);
             vehEntryMap[exitSecretHashed].multiplier = 0;
             vehEntryMap[exitSecretHashed].depositedWeis = 0;
         }
 
         pendingPaymentsMap[enter][exit].head = currentHead.add(count);
-        // pendingPaymentsMap[enter][exit].length = pendingPaymentsMap[enter][exit].length.sub(count);
-
-        success = true;
-    }
-    
-    function resetHead(address enter, address exit)
-        fromOwner
-        public
-        returns (bool success)
-    {
-        require(pendingPaymentsMap[enter][exit].length == 0, "Pending payments still exist.");
-        pendingPaymentsMap[enter][exit].head = 0;
+        // handle update of the `length` in the calling function to save on a storage read.
 
         success = true;
     }
 
 
-    
+
 
 }

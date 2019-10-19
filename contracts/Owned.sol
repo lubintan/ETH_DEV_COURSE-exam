@@ -6,25 +6,27 @@ contract Owned is OwnedI {
 
     address private contractOwner;
 
-    constructor () internal {
+    constructor ()
+        public
+    {
         contractOwner = msg.sender;
     }
 
-    function setOwner(address newOwner) 
-        public 
+    function setOwner(address newOwner)
+        public
         returns(bool success)
     {
         address prevOwner = contractOwner;
 
         require (msg.sender == prevOwner, "This action may only be performed by the current contract contractOwner.");
         require(newOwner != prevOwner, "Caller has already been set as contractOwner.");
-        require(msg.sender != address(0), "Address 0x0 not allowed.");
+        require(newOwner != address(0), "Address 0x0 not allowed.");
 
         contractOwner = newOwner;
 
         emit LogOwnerSet(msg.sender, newOwner);
 
-        success = true;        
+        success = true;
     }
 
     function getOwner()

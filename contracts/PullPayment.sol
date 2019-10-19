@@ -9,7 +9,7 @@ contract PullPayment is PullPaymentA {
 
     mapping (address => uint) internal owed;
 
-    constructor () internal {}
+    constructor() public {}
 
     function asyncPayTo(address whom, uint amount)
         internal

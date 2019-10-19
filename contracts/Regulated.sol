@@ -7,7 +7,7 @@ contract Regulated is RegulatedI {
     address private thisRegulator;
 
     constructor(address newRegulator)
-        internal
+        public
     {
         require(newRegulator != address(0), "Address 0x0 not allowed.");
         thisRegulator = newRegulator;

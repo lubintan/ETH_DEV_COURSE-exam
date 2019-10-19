@@ -7,7 +7,7 @@ contract MultiplierHolder is Owned, MultiplierHolderI {
 
     mapping(uint => uint) private multiplierMap;
 
-    constructor () internal {}
+    constructor() public {}
 
     function setMultiplier(uint vehicleType, uint multiplier)
         public

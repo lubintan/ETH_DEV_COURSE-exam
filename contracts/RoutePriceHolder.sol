@@ -6,9 +6,9 @@ import './interfaces/RoutePriceHolderI.sol';
 
 contract RoutePriceHolder is Owned, TollBoothHolder, RoutePriceHolderI {
 
-    mapping (address => mapping (address => uint)) private priceMap;
+    mapping(address => mapping(address => uint)) private priceMap;
 
-    constructor () internal {}
+    constructor() public {}
 
     function setRoutePrice(address entryBooth, address exitBooth, uint priceWeis)
         public

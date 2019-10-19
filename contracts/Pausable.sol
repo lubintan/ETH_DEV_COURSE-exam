@@ -7,8 +7,8 @@ contract Pausable is Owned, PausableI {
 
     bool private paused;
 
-    constructor (bool newState) 
-        internal
+    constructor (bool newState)
+        public
     {
         paused = newState;
         emit LogPausedSet(msg.sender, newState);

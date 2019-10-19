@@ -7,7 +7,7 @@ contract TollBoothHolder is Owned, TollBoothHolderI {
 
     mapping (address =>  bool) private tollBoothMap;
 
-    constructor () internal {}
+    constructor() public {}
 
     function addTollBooth(address tollBooth)
         public
