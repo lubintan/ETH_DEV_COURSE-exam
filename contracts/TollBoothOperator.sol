@@ -19,6 +19,25 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
         address entryBooth;
         uint multiplier;
         uint depositedWeis;
+
+        /*
+        For the `multiplier` variable, the decision was made to write it to storage, instead of using `vehicle`
+        and doing the 2 storage reads (`getVehicleType` in Regulator and then `getMultiplier` in MultiplierHolder) to access
+        `multiplier`.
+
+        Consideration was given as such: Gas cost of an SSTORE is around 100 times that of an SLOAD. Even with the refund from freeing up a storage word, the cost of
+        writing and freeing up is still alot higher than that of a read.
+
+        Performing some diagnostics in Truffle showed the cost of doing the 2 storage reads costing about 25% less gas than doing a
+        write, read, and refund. And that each written `multiplier` will need to be read 5 times on average in order to
+        cost less than that of doing 2 storage reads each time `multiplier` needs to be accessed.
+
+        HOWEVER, the value of `multiplier` at the time of a vehicle's entry, needs to be known at the time of their exit. Using the
+        2 storage reads method will only allow us to get the latest `multiplier` value, which may have changed since entry.
+
+        Hence, the decision to not reference `multiplier` via the 2 storage reads, and instead to store it in the
+        `VehEntryInfo` struct.
+        */
     }
 
     struct PendingPayments
