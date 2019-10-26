@@ -40,6 +40,7 @@ contract Regulator is Owned, RegulatorI{
         returns(TollBoothOperatorI newOperator)
     {
         require(!tollBoothOperatorMap[owner], "Operator exists.");
+        require(owner != getOwner(), "Operator owner cannot be the current regulator owner");
 
         TollBoothOperator newTollBoothOperator = new TollBoothOperator(true, deposit, address(this));
 
