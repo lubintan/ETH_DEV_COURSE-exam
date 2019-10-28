@@ -82,7 +82,7 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
         uint multiplier = getMultiplier(vehicleType);
 
         require(vehicleType > 0, "Vehicle is not registered.");
-        require(multiplier > 0, "Vehicle not allowed ont his road system.");
+        require(multiplier > 0, "Vehicle not allowed on this road system.");
         require(isTollBooth(entryBooth), "Toll booth is not registered.");
         require(msg.value >= (deposit.mul(multiplier)), "Not enough deposit sent.");
         require(vehEntryMap[exitSecretHashed].entryBooth == address(0), "This hash has been used before.");
