@@ -19,6 +19,7 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
         address entryBooth;
         uint multiplier;
         uint depositedWeis;
+        bool pending;
 
         /*
         For the `multiplier` variable, the decision was made to write it to storage, instead of using `vehicle`
@@ -123,8 +124,8 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
 
         require(isTollBooth(msg.sender), "Sender is not a recognized toll booth.");
         require(msg.sender != entryBooth, "Entry and exit booth cannot be the same.");
-        require(vehicle != address(0), "No exisitng matches for hashed secret.");
-        require(entryBooth != address(0), "Secret has already been reported on exit.");
+        require(vehicle != address(0), "No existing matches for hashed secret.");
+        require(!vehEntryMap[exitSecretHashed].pending, "Secret has already been reported on exit.");
 
         uint fee = getRoutePrice(entryBooth, msg.sender).mul(vehEntryMap[exitSecretHashed].multiplier);
 
@@ -134,6 +135,7 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
 
         if (fee == 0) {
             require(insert(entryBooth, msg.sender, exitSecretHashed), "Adding pending payment to queue failed.");
+            vehEntryMap[exitSecretHashed].pending = true;
             emit LogPendingPayment(exitSecretHashed, entryBooth, msg.sender);
             return 2;
         } else {
@@ -247,6 +249,7 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
             vehEntryMap[exitSecretHashed].vehicle = address(0);
             vehEntryMap[exitSecretHashed].multiplier = 0;
             vehEntryMap[exitSecretHashed].depositedWeis = 0;
+            vehEntryMap[exitSecretHashed].pending = false;
         }
 
         pendingPaymentsMap[enter][exit].head = currentHead.add(count);
