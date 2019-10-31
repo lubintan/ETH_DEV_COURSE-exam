@@ -36,6 +36,7 @@
     "bluebird": "3.5.0",
     "jquery": "3.4.1",
     "truffle-contract": "4.0.27",
-    "web3": "1.2.2"
+    "web3": "1.2.2",
+    "bootstrap": "4.0.0"
   }
 }

@@ -2,7 +2,7 @@ body {
   margin-left: 25%;
   margin-right: 25%;
   margin-top: 10%;
-  font-family: "Open Sans", sans-serif;
+  /* font-family: "Open Sans", sans-serif; */
 }
 
 label {
@@ -49,4 +49,11 @@ h3 {
 
 .hint {
   color: #666;
+}
+
+*
+{
+   font-size: 1em !important;
+   color: rgb(5, 13, 117) !important;
+   font-family: Arial, Helvetica, sans-serif !important;
 }

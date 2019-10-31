@@ -10,7 +10,6 @@ const toBytes32 = require("../../utils/toBytes32.js");
 
 // console.log(initialOperatorAddr);
 
-
 let regulatorOwner, deployed, tbOperatorContract;
 let tbOpContractAddress = null;
 let tbOperatorOwner = null;
@@ -30,74 +29,239 @@ Regulator.setProvider(web3.currentProvider);
 const TollBoothOperator = truffleContract(tbOperatorJson);
 TollBoothOperator.setProvider(web3.currentProvider);
 
+const roadEntryTableBuilder = function(logs){
+    try{
+        $('#entryTableTitle').empty();
+        $('#entryTableTitle').append('<h2 class="font-weight-bold">Entry History</h2><br>');
+        $("#entryTable").empty();
+        
+        //  header row
+        let header = $("<thead>");
+        let headerRow = $("<tr>");
+        let labels ="";
 
-// table functions
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Block No.' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Vehicle' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Entry Booth' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Secret Hashed' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Multiplier' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Deposited Weis' + '</td>';
 
-const addCell = function(row, value) {
-    let cell = document.createElement('cell');
-    cell.innerHTML = value;
-    row.appendChild(cell);
-  }
 
-const roadEntryTableRow = function (table, vehicle, entryBooth, exitSecretHashed, multiplier, depositedWeis){
-    let row = document.createElement('row');
-    addCell(row, vehicle);
-    addCell(row, entryBooth);
-    addCell(row, exitSecretHashed);
-    addCell(row, multiplier);
-    addCell(row, depositedWeis);
+        header.append(headerRow.append(labels));
+        $("#entryTable").append(header);
 
-    table.appendChild(row);
+        for(i=0; i < logs.length; i++){
+        
+            let newRow = $("<tr>");
+            let cols = "";
+
+            
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].blockNumber + '</td>';
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].args.vehicle + '</td>';
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].args.entryBooth + '</td>';
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].args.exitSecretHashed + '</td>';
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].args.multiplier.toString(10) + '</td>';
+            cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + logs[i].args.depositedWeis.toString(10) + '</td>';
+
+            newRow.append(cols);
+            $("#entryTable").append(newRow);
+        }
+    }catch(e){
+        $("#entryTable").html(e.toString());
+    }    
 }
 
-const roadEntryTableBuilder = function(logs){
+const exitTollBoothTableBuilder = async function (logs, thisExitBoothAddr) {
+    try{
+        $("#reExitTable").empty();
+        $('#reExitTableTitle').empty();
+        $('#reExitTableTitle').append('<h2 class="font-weight-bold">Exit History At This Booth</h2><br>');
+        $("#rePendingTable").empty();
+        $('#rePendingTableTitle').empty();
+        $('#rePendingTableTitle').append('<h2 class="font-weight-bold">Pending Payments At This Booth</h2><br>');
 
-    console.log('abc:', logs);
+        //  exit table header row
+        let header = $("<thead>");
+        let headerRow = $("<tr>");
+        let labels ="";
+        labels +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Block No.' + '</td>';
+        labels +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Booth' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Secret Hashed' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Final Fee Weis' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Refund Weis' + '</td>';
 
-    const table = document.getElementById('entryTbl');
-    roadEntryTableRow(table, "Vehicle", "Entry Booth", "Exit Secret Hashed", "Multiplier", "Deposited Weis");
 
-    for (i = 0; i < logs.length; i++){
+        header.append(headerRow.append(labels));
+        $("#reExitTable").append(header);
 
-        roadEntryTableRow(table,
-            logs[i].args.vehicle,
-            logs[i].args.entryBooth,
-            logs[i].args.exitSecretHashed,
-            logs[i].args.multiplier,
-            logs[i].args.depositedWeis,
-            )
+        //  pending table header row
+        let headerP = $("<thead>");
+        let headerRowP = $("<tr>");
+        let labelsP ="";
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Block No.' + '</td>';
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Secret Hashed' + '</td>';
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Entry Booth' + '</td>';
+        labelsP +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Booth' + '</td>';
+
+        headerP.append(headerRowP.append(labelsP));
+        $("#rePendingTable").append(headerP);
+
+        for(i=0; i < logs.length; i++){
+
+            const exitHash = logs[i].args.exitSecretHashed;
+            const exitEvents = await tbOperatorContract.getPastEvents("LogRoadExited",
+                { filter: {exitSecretHashed: exitHash, exitBooth: thisExitBoothAddr}, fromBlock:0, toBlock:'latest' });
+            const pendingEvents = await tbOperatorContract.getPastEvents("LogPendingPayment",
+                { filter: {exitSecretHashed: exitHash, exitBooth: thisExitBoothAddr }, fromBlock:0, toBlock:'latest' });
+
+            if (exitEvents.length > 0){
+
+                let newRow = $("<tr>");
+                let cols = "";
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].blockNumber + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.exitBooth + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.exitSecretHashed + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.finalFee.toString(10) + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.refundWeis.toString(10) + '</td>';
+        
+                newRow.append(cols);
+                $("#reExitTable").append(newRow);
+            }
+            
+            if (pendingEvents.length > 0 ){
+
+                let newRowP = $("<tr>");
+                let colsP = "";
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].blockNumber + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.exitSecretHashed + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.entryBooth + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.exitBooth + '</td>';
+            
+                newRowP.append(colsP);
+                $("#rePendingTable").append(newRowP);
+            }
+        }
+    }catch(e){
+        $("#reExitTable").html(e.toString());
     }
 }
 
+const roadExitTableBuilder = async function(logs){
+    try{
+        $("#exitTable").empty();
+        $('#exitTableTitle').empty();
+        $('#exitTableTitle').append('<h2 class="font-weight-bold">Exit History</h2><br>');
+        $("#pendingTable").empty();
+        $('#pendingTableTitle').empty();
+        $('#pendingTableTitle').append('<h2 class="font-weight-bold">Pending Payments</h2><br>');
+
+        //  exit table header row
+        let header = $("<thead>");
+        let headerRow = $("<tr>");
+        let labels ="";
+        labels +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Block No.' + '</td>';
+        labels +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Booth' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Secret Hashed' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Final Fee Weis' + '</td>';
+        labels += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Refund Weis' + '</td>';
+
+
+        header.append(headerRow.append(labels));
+        $("#exitTable").append(header);
+
+        //  pending table header row
+        let headerP = $("<thead>");
+        let headerRowP = $("<tr>");
+        let labelsP ="";
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Block No.' + '</td>';
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Secret Hashed' + '</td>';
+        labelsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Entry Booth' + '</td>';
+        labelsP +=  '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + 'Exit Booth' + '</td>';
+
+        headerP.append(headerRowP.append(labelsP));
+        $("#pendingTable").append(headerP);
+
+        for(i=0; i < logs.length; i++){
+
+            const exitHash = logs[i].args.exitSecretHashed;
+            const exitEvents = await tbOperatorContract.getPastEvents("LogRoadExited",
+                { filter: {exitSecretHashed: exitHash }, fromBlock:0, toBlock:'latest' });
+            const pendingEvents = await tbOperatorContract.getPastEvents("LogPendingPayment",
+                { filter: {exitSecretHashed: exitHash }, fromBlock:0, toBlock:'latest' });
+
+            if (exitEvents.length > 0){
+
+                let newRow = $("<tr>");
+                let cols = "";
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].blockNumber + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.exitBooth + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.exitSecretHashed + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.finalFee.toString(10) + '</td>';
+                cols += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + exitEvents[0].args.refundWeis.toString(10) + '</td>';
+        
+                newRow.append(cols);
+                $("#exitTable").append(newRow);
+            }
+            
+            if (pendingEvents.length > 0 ){
+
+                let newRowP = $("<tr>");
+                let colsP = "";
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].blockNumber + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.exitSecretHashed + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.entryBooth + '</td>';
+                colsP += '<td style="word-wrap: break-word;min-width: 20px;max-width: 120px;">' + pendingEvents[0].args.exitBooth + '</td>';
+            
+                newRowP.append(colsP);
+                $("#pendingTable").append(newRowP);
+            }
+        }
+    }catch(e){
+        $("#exitTable").html(e.toString());
+    }
+}
+
+
+
 const getEntryExitHistoryAction = async function() {
     if(tbOperatorOwner == null){
-        $("#entryTbl").html("Please specify a valid Toll Booth Operator Contract Address first.");
+        $("#entryTable").html("Please specify a valid Toll Booth Operator Contract Address first.");
     }else{
         try{
             const vehAddr = $("input[list='indVehAddr']").val();
             const pastEvents = await tbOperatorContract.getPastEvents("LogRoadEntered",
             { filter: {vehicle: vehAddr }, fromBlock:0, toBlock:'latest' });
 
-console.log(vehAddr, pastEvents);
-
             if (pastEvents.length == 0){
-                $("#entryTbl").html("No records found.");
+                $("#entryTable").html("No records found.");
             }else{
                 roadEntryTableBuilder(pastEvents);
+                await roadExitTableBuilder(pastEvents);
             }
 
         } catch (e){
-            $("#entryTbl").html(e.toString());
+            $("#entryTable").html(e.toString());
         }
     }
 };
 
 const pendingPaymentsCount = async function() {
-    const entryB = $("input[list='entryB']").val();
-    const exitB = $("input[list='exitB']").val();
+    if(tbOperatorOwner == null){
+        $("#numPendingPayments").html("Please specify a valid Toll Booth Operator Contract Address first.");
+    }else{
+        try{
+            const entryB = $("input[list='entryB']").val();
+            const exitB = $("input[list='exitB']").val();
+        
+            const res = await tbOperatorContract.getPendingPaymentCount.call(entryB, exitB);
 
-    const res = await tbOperatorContract.getPendingPaymentCount.call(entryB, exitB);
-    console.log(res.toString(10));
+            $("#numPendingPayments").html("Number Of Pending Payments For This Route: " + res.toString(10));
+        } catch (e) {
+            $("#numPendingPayments").html(e.toString());
+            console.error(e);
+        }
+    }
 }
 
 const reportExitAction = async function() {
@@ -107,6 +271,7 @@ const reportExitAction = async function() {
         try{
             const gas = 300000; 
             let txId;
+            let exitHash = 0;
             const exitSecret = web3.utils.fromAscii($("input[name='exitSecret']").val());
             const exitTollBooth = $("input[list='exitTollBooth']").val();
 
@@ -140,6 +305,10 @@ const reportExitAction = async function() {
                     $("#logReportExitExitSecretHashed").html("");
                     $("#logReportExitFinalFee").html("");
                     $("#logReportExitRefundWeis").html("");
+                    $("#reExitTableTitle").html("");
+                    $("#reExitTable").html("");
+                    $("#rePendingTableTitle").html("");
+                    $("#rePendingTable").html("");
                 }
             )
             .on(
@@ -153,6 +322,10 @@ const reportExitAction = async function() {
                         $("#logReportExitExitSecretHashed").html("");
                         $("#logReportExitFinalFee").html("");
                         $("#logReportExitRefundWeis").html("");
+                        $("#reExitTableTitle").html("");
+                        $("#reExitTable").html("");
+                        $("#rePendingTableTitle").html("");
+                        $("#rePendingTable").html("");
 
                     } else if (receipt.logs.length == 0) {
                         console.error("Empty logs");
@@ -163,31 +336,49 @@ const reportExitAction = async function() {
                         $("#logReportExitExitSecretHashed").html("");
                         $("#logReportExitFinalFee").html("");
                         $("#logReportExitRefundWeis").html("");
+                        $("#reExitTableTitle").html("");
+                        $("#reExitTable").html("");
+                        $("#rePendingTableTitle").html("");
+                        $("#rePendingTable").html("");
                     } else {
                         $("#reportExitTxReceipt").html("Transfer executed. Tx ID: " + txId);
-                        const eventName = receipt.logs[0].event;
+                        eventName = receipt.logs[0].event;
                         $("#logReportExitEvent").html("Event Name: " + eventName);
                         if (eventName == 'LogRoadExited'){
                             $("#logReportExitExitBooth").html("Exit Booth: " + receipt.logs[0].args.exitBooth);
                             $("#logReportExitExitSecretHashed").html("Exit Secret Hashed: " + receipt.logs[0].args.exitSecretHashed);
                             $("#logReportExitFinalFee").html("Final Fee: " + receipt.logs[0].args.finalFee);
                             $("#logReportExitRefundWeis").html("Refund Weis: " + receipt.logs[0].args.refundWeis);
+                            exithash = receipt.logs[0].args.exitSecretHashed;
                         } else if(eventName == 'LogPendingPayment'){
-
-                            console.log(receipt.logs[0]);
                             $("#logReportExitExitBooth").html("Exit Booth: " + receipt.logs[0].args.exitBooth);
                             $("#logReportExitExitSecretHashed").html("Exit Secret Hashed: " + receipt.logs[0].args.exitSecretHashed);
                             $("#logReportExitFinalFee").html("Entry Booth: " + receipt.logs[0].args.entryBooth);
                             $("#logReportExitRefundWeis").html("");
+                            exithash = receipt.logs[0].args.exitSecretHashed;
                         }else{
                             $("#logReportExitExitBooth").html("");
                             $("#logReportExitExitSecretHashed").html("");
                             $("#logReportExitFinalFee").html("");
                             $("#logReportExitRefundWeis").html("");
+                            $("#reExitTableTitle").html("");
+                            $("#reExitTable").html("");
+                            $("#rePendingTableTitle").html("");
+                            $("#rePendingTable").html("");
                         }
                     }
                 }       
             )
+
+
+            if (exithash != 0){
+                const thisVehHistory = await tbOperatorContract.getPastEvents("LogRoadEntered",
+                { filter: {exitSecretHashed: exithash }, fromBlock:0, toBlock:'latest' });
+                const thisVehAddr = thisVehHistory[0].args.vehicle;
+                const thisVehLogs = await tbOperatorContract.getPastEvents("LogRoadEntered",
+                { filter: {vehicle: thisVehAddr }, fromBlock:0, toBlock:'latest' });
+                await exitTollBoothTableBuilder(thisVehLogs, exitTollBooth);
+            }
         } catch (e){
             let errorString = e.toString();
             if (errorString.includes("invalid address")){
@@ -200,7 +391,10 @@ const reportExitAction = async function() {
             $("#logReportExitExitSecretHashed").html("");
             $("#logReportExitFinalFee").html("");
             $("#logReportExitRefundWeis").html("");
-            console.error(e);
+            $("#reExitTableTitle").html("");
+            $("#reExitTable").html("");
+            $("#rePendingTableTitle").html("");
+            $("#rePendingTable").html("");
         }
     }
 };
@@ -810,6 +1004,7 @@ const setVehTypeAction = async function() {
         const vehAddr = $("input[list='vehAddr']").val();
         const vehType = toBN($("input[name='vehType']").val());
         // let deployed = await Regulator.deployed();
+
         let simResult = await deployed.setVehicleType.call(
             vehAddr,
             vehType,
@@ -1016,7 +1211,6 @@ window.addEventListener('load', async function() {
 
     await Promise.all([
         populator("vehAddr", accountsList),
-        // populator("vehAddrToCheck",accountsList),
         populator("oprAddr", accountsList),
         populator("tbAddr",accountsList),
 
@@ -1025,11 +1219,6 @@ window.addEventListener('load', async function() {
         populator("exitTollBooth",accountsList),
         populator("rpEntryBooth",accountsList),
         populator("rpExitBooth",accountsList),
-        // populator("tbAddr",accountsList),
-        // populator("tbAddr",accountsList),
-        // populator("tbAddr",accountsList),
-        // populator("tbAddr",accountsList),
-        // populator("tbAddr",accountsList),
         populator("entryB",accountsList),
         populator("exitB",accountsList),
 
@@ -1053,21 +1242,20 @@ window.addEventListener('load', async function() {
         $("#PendingPaymentsCount").click(pendingPaymentsCount),
         $("#CheckRoutePRice").click(checkRoutePriceAction),
         $("#UpdateRoutePrice").click(updateRoutePriceAction),
-        // $("#GetEntryExitHistory").click(getEntryExitHistoryAction),
-        // $("#GetEntryExitHistory").click(getEntryExitHistoryAction),
-        // $("#GetEntryExitHistory").click(getEntryExitHistoryAction),
-        // $("#GetEntryExitHistory").click(getEntryExitHistoryAction),
     ]).catch(console.error);
 });
 
 let populator = function(elId, list){
-    let selector = this.document.getElementById(elId);
+    try{
+        let selector = this.document.getElementById(elId);
 
-    for(let i = 0; i < list.length; i++) {
-        let el = document.createElement("option");
-        el.textContent = list[i];
-        el.value = list[i];
-        selector.appendChild(el);
-
+        for(let i = 0; i < list.length; i++) {
+            let el = document.createElement("option");
+            el.textContent = list[i];
+            el.value = list[i];
+            selector.appendChild(el);
+        }
+    }catch(e) {
+        // do nothing.
     }
 }

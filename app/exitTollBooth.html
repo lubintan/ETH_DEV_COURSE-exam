@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" id="bootstrap-css">
+    <link rel="stylesheet" href="app.css">
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="app.js"></script>
+<title>TOLL BOOTH</title>
+<meta charset="utf-8">
+
+</head>
+<body>
+
+
+<section id="tabs">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 ">
+                <nav>
+                    <div class="nav nav-tabs nav-fill" role="tablist">
+                        <a class="nav-item nav-link" data-toggle="tab" href="index.html" role="tab">Regulator</a>
+                        <a class="nav-item nav-link" data-toggle="tab" href="tollBoothOperator.html" role="tab">Toll Booth Operator</a>
+                        <a class="nav-item nav-link" data-toggle="tab" href="individualVehicle.html" role="tab">Individual Vehicle</a>
+                        <a class="nav-item nav-link active"  data-toggle="tab" href="exitTollBooth.html" role="tab">Exit Toll Booth</a>
+                    </div>
+                </nav>
+                <br><h1 class="font-weight-bold">Check Nummber of Pending Payments</h1><br>
+
+                Entry Booth:<input list="entryB" placeholder="double-click for dropdown"/>
+                <datalist id="entryB"></datalist><br>
+
+                Exit Booth:<input list="exitB" placeholder="double-click for dropdown"/>
+                <datalist id="exitB"></datalist><br>
+
+                <button id="PendingPaymentsCount">Check Number of Pending Payments</button><br>
+                <span id="numPendingPayments"></span><br><br>
+
+                <br><h1 class="font-weight-bold">Report Exit</h1><br>
+                Reporting Toll Booth: <input list="exitTollBooth" placeholder="double-click for dropdown"/>
+                <datalist id="exitTollBooth"></datalist><br>
+
+                Secret Code: <input name="exitSecret" type="text" /><br>
+
+                <button id="ReportExit">Report Exit</button><br>
+
+                <span id="reportExitTxCreated"></span><br><br>
+                <span id="reportExitTxReceipt"></span><br><br>
+                <span id="logReportExitEvent"></span><br><br>
+                <span id="logReportExitExitBooth"></span><br><br>
+                <span id="logReportExitExitSecretHashed"></span><br>
+                <span id="logReportExitFinalFee"></span><br>
+                <span id="logReportExitRefundWeis"></span><br>
+
+                <div class="container">
+                        <div id= "reExitTableTitle"></div>
+                        <table id="reExitTable" class="table order-list">
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="container">
+                        <div id= "rePendingTableTitle"></div>
+                        <table id="rePendingTable" class="table order-list">
+                        <tbody>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div> 
+        </div>
+    </div>
+</section>
+</body>
+</html>

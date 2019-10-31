@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css" id="bootstrap-css">
+    <link rel="stylesheet" href="app.css">
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="app.js"></script>
+    <title>TOLL BOOTH OPERATOR</title>
+    <meta charset="utf-8">
+</head>
+<body>
+
+<section id="tabs">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 ">
+                    <nav>
+                        <div class="nav nav-tabs nav-fill" role="tablist">
+                            <a class="nav-item nav-link" data-toggle="tab" href="index.html" role="tab">Regulator</a>
+                            <a class="nav-item nav-link active" data-toggle="tab" href="tollBoothOperator.html" role="tab">Toll Booth Operator</a>
+                            <a class="nav-item nav-link" data-toggle="tab" href="individualVehicle.html" role="tab">Individual Vehicle</a>
+                            <a class="nav-item nav-link"  data-toggle="tab" href="exitTollBooth.html" role="tab">Exit Toll Booth</a>
+                        </div>
+                    </nav>
+                <div>
+                    <h2 class="font-weight-bold"><br>
+                    <span id="tbOpContract">No Toll Booth Found</span><br>
+                    <span id="tbOpOwner"></span><br>
+                    </h2>
+                    <button id="PauseOperator">Pause Operator</button><button id="UnpauseOperator">Unpause Operator</button><br><br>
+                    <h2><span id="pausedStatus"></span></h2><br><br>
+                    Change Current Toll Booth Operator Contract:<input name="tbOpContractAddress" placeholder="paste new operator contract address here."/>
+                    <button id="SpecifyOperatorAddr">Change</button><br><br>
+                </div><br><br>
+                <div>
+                    <h1 class="font-weight-bold">Add Toll Booth.</h1><br>
+                    Toll Booth Address To Add:<input list="tbAddr" placeholder="double-click for dropdown"/>
+                    <datalist id="tbAddr"></datalist><br>
+                    <button id="CheckTollBooth">Check If Toll Booth Is Registered</button><br><br>
+                    <span id="tollBoothStatus"></span><br><br>
+                    <button id="AddTollBooth">Add Toll Booth</button><br><br>
+                    <span id="addTollBoothTxCreated"></span><br><br>
+                    <span id="addTollBoothTxReceipt"></span><br><br>
+                    <span id="logaddTollBoothEvent"></span><br><br>
+                    <span id="logaddTollBoothSender"></span><br><br>
+                    <span id="logaddTollBoothTollBooth"></span><br>
+                </div><br><br>
+                <div>
+                    <h1 class="font-weight-bold">Update Base Deposit Requirement.</h1><br>
+                    <span id="currentDeposit"></span><br><br>
+                    New Deposit<input name="newDeposit" type="number" /><br>
+                    <button id="UpdateDeposit">Update Deposit</button><br><br>
+                    <span id="setDepositTxCreated"></span><br><br>
+                    <span id="setDepositTxReceipt"></span><br><br>
+                    <span id="logSetDepositEvent"></span><br><br>
+                    <span id="logSetDepositSender"></span><br><br>
+                    <span id="logSetDepositAmount"></span><br>
+                </div><br><br>
+                <div>
+                    <h1 class="font-weight-bold">Update Base Route Price.</h1><br>
+                    Entry Booth Address<input list="rpEntryBooth" placeholder="double-click for dropdown"/>
+                    <datalist id="rpEntryBooth"></datalist><br><br>
+                    Exit Booth Address<input list="rpExitBooth" placeholder="double-click for dropdown"/>
+                    <datalist id="rpExitBooth"></datalist><br><br>
+                    <button id="CheckRoutePRice">Check Base Route Price</button><br><br>
+                    <span id="currentRoutePrice"></span><br><br>
+                    New Base Route Price<input name="newRoutePrice" type="number" /><br>
+                    <button id="UpdateRoutePrice">Update Base Route Price</button><br><br>
+                    <span id="setRoutePriceTxCreated"></span><br><br>
+                    <span id="setRoutePriceTxReceipt"></span><br><br>
+                    <span id="logSetRoutePriceEvent"></span><br><br>
+                    <span id="logSetRoutePriceEntryBooth"></span><br>
+                    <span id="logSetRoutePriceExitBooth"></span><br>
+                    <span id="logSetRoutePricePriceWeis"></span><br>
+                </div><br><br>
+                <div>
+                    <h1 class="font-weight-bold">Set Multiplier.</h1><br>
+                    Enter Vehicle Type<input name="vehTypeForMultiplier" type="number"/><br>
+                    <button id="CheckMultiplier">Check Multiplier</button><br><br>
+                    <span id="currentMultiplier"></span><br><br>
+                    New Multiplier<input name="newMultiplier" type="number" /><br>
+                    <button id="UpdateMultiplier">Update Multiplier</button><br><br>
+                    <span id="setMultiplierTxCreated"></span><br><br>
+                    <span id="setMultiplierTxReceipt"></span><br><br>
+                    <span id="logSetMultiplierEvent"></span><br><br>
+                    <span id="logSetMultiplierVehicleType"></span><br><br>
+                    <span id="logSetMultiplierMultiplier"></span><br>
+                </div>
+            </div>    
+        </div>
+    </section>
+</body>
+</html>
