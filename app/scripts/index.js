@@ -5,23 +5,22 @@ const $ = require("jquery");
 const regulatorJson = require("../../build/contracts/Regulator.json");
 const tbOperatorJson = require("../../build/contracts/TollBoothOperator.json");
 const toBN = Web3.utils.toBN;
-const toBytes32 = require("../../utils/toBytes32.js");
-// const initialOperatorAddr = require("../../migrations/2_deploy_contracts.js");
-
-// console.log(initialOperatorAddr);
 
 let regulatorOwner, deployed, tbOperatorContract;
-let tbOpContractAddress = null;
 let tbOperatorOwner = null;
 let currentDeposit = null;
-// // Supports Metamask, and other wallets that provide / inject 'web3'.
-// if (typeof web3 !== 'undefined') {
-//     // Use the Mist/wallet/Metamask provider.
-//     window.web3 = new Web3(web3.currentProvider);
-// } else {
-//     // Your preferred fallback.
-    window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545')); 
-// }
+
+window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545')); 
+
+// Uncomment this section below to enable web3 injection.
+/* 
+if (typeof web3 !== 'undefined') {
+    window.web3 = new Web3(web3.currentProvider);
+    window.ethereum.enable();
+    } 
+// Note that the deployed regulator and toll booth operator owners' accounts will need to be imported
+// into Metamask or other wallet in other to be used. 
+*/ 
 
 
 const Regulator = truffleContract(regulatorJson);
@@ -620,8 +619,6 @@ const checkMinDepositAction = async function() {
             const multiplier = await tbOperatorContract.getMultiplier.call(vehType);
             const minDeposit = multiplier.mul(deposit);
 
-            console.log(vehAddr, vehType.toString(10), minDeposit.toString(10));
-
             if (vehType.toString(10) == '0'){
                 $("#minDeposit").html("Vehicle is not registered with this Regulator.");
             } else if (multiplier.toString(10) == '0'){
@@ -1204,8 +1201,6 @@ window.addEventListener('load', async function() {
     await web3.eth.net.getId();
     $('#regAddr').html(deployed.address);
     $('#regOwner').html(regulatorOwner);
-
-    console.log(initialOperatorAddr);
 
     await getCurrentOperator(initialOperatorAddr);
 
