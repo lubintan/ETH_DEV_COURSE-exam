@@ -2,8 +2,6 @@
 
 // This is where you write your test scenarios as per the README.
 
-const fs = require("fs");
-const path = require('path');
 const expectedExceptionPromise = require("../utils/expectedException.js");
 const randomIntIn = require("../utils/randomIntIn.js");
 const toBytes32 = require("../utils/toBytes32.js");
@@ -11,7 +9,7 @@ const toBytes32 = require("../utils/toBytes32.js");
 
 const Regulator = artifacts.require("./Regulator.sol");
 const TollBoothOperator = artifacts.require("./TollBoothOperator.sol");
-const { fromWei, padLeft, toBN } = web3.utils;
+const { toBN } = web3.utils;
 
 const maxGas = 15000000;
 
@@ -52,39 +50,35 @@ contract("Scenarios", function(accounts) {
     // Add as many `before`, `beforeEach`, `describe`, `afterEach`, `after` as you want.
     // But no additional `it`.
 
-    let owner0, owner1, booth1, booth2, vehicle1, vehicle2, someoneElse;
-    // const addressZero = padLeft(0, 40);
-    const price01 = randomIntIn(1, 1000);
-    const deposit0 = price01 + randomIntIn(1, 1000);
-    // const deposit1 = deposit0 + randomIntIn(1, 1000);
-    const vehicleType0 = randomIntIn(1, 1000);
-    // const vehicleType1 = vehicleType0 + randomIntIn(1, 1000);
-    const multiplier0 = randomIntIn(1, 1000);
-    // const multiplier1 = multiplier0 + randomIntIn(1, 1000);
+    let owner1, owner2, booth1, booth2, vehicle1, vehicle2, someoneElse;
+    const price = randomIntIn(1, 1000);
+    const deposit = price + randomIntIn(1, 1000);
+    const vehicleType1 = randomIntIn(1, 1000);
+    const vehicleType2 = vehicleType1 + randomIntIn(1, 1000);
+    const multiplier1 = randomIntIn(1, 1000);
+    const multiplier2 = multiplier1 + randomIntIn(1, 1000);
     const tmpSecret = randomIntIn(1, 1000);
     const secret1 = toBytes32(tmpSecret);
     const secret2 = toBytes32(tmpSecret + randomIntIn(1, 1000));
 
     before("Prepare and deploy regulator", async function() {
         assert.isAtLeast(accounts.length, 8);
-        [ owner0, owner1, booth1, booth2, vehicle1, vehicle2, someoneElse ] = accounts;
-        regulator = await Regulator.new({ from: owner0 });
-        await regulator.setVehicleType(vehicle1, vehicleType0, { from: owner0 });
-        await regulator.setVehicleType(vehicle2, vehicleType0, { from: owner0 });
+        [ owner1, owner2, booth1, booth2, vehicle1, vehicle2, someoneElse ] = accounts;
+        regulator = await Regulator.new({ from: owner1 });
+        await regulator.setVehicleType(vehicle1, vehicleType1, { from: owner1 });
+        await regulator.setVehicleType(vehicle2, vehicleType2, { from: owner1 });
     });
 
     describe("Tests with new operator deployed for each test.", function() {
 
         beforeEach("Deploy Operator and set up toll booths.", async function() {
-            const txObj = await regulator.createNewOperator(owner1, deposit0, { from: owner0 });
+            const txObj = await regulator.createNewOperator(owner2, deposit, { from: owner1 });
             operator = await TollBoothOperator.at(txObj.logs[1].args.newOperator);
-            // await operator.addTollBooth(booth0, { from: owner1 });
-            await operator.addTollBooth(booth1, { from: owner1 });
-            await operator.addTollBooth(booth2, { from: owner1 });
-            await operator.setMultiplier(vehicleType0, multiplier0, { from: owner1 });
-            // await operator.setMultiplier(vehicleType1, multiplier1, { from: owner1 });
-            // await operator.setRoutePrice(booth0, booth1, price01, { from: owner1 });
-            await operator.setPaused(false, { from: owner1 });
+            await operator.addTollBooth(booth1, { from: owner2 });
+            await operator.addTollBooth(booth2, { from: owner2 });
+            await operator.setMultiplier(vehicleType1, multiplier1, { from: owner2 });
+            await operator.setMultiplier(vehicleType2, multiplier2, { from: owner2 });
+            await operator.setPaused(false, { from: owner2 });
             hashed1 = await operator.hashSecret(secret1);
             hashed2 = await operator.hashSecret(secret2);
         });
@@ -93,7 +87,7 @@ contract("Scenarios", function(accounts) {
             let paymentDeposit;
 
             beforeEach("Set up vehicle entry.", async function() {
-                paymentDeposit = toBN(deposit0 * multiplier0);
+                paymentDeposit = toBN(deposit * multiplier1);
 
                 // Vehicle entry.
                 const successEnterRoad = await operator.enterRoad.call(
@@ -104,27 +98,27 @@ contract("Scenarios", function(accounts) {
                 assert.strictEqual(txObjEnter.receipt.logs.length, 1);
                 assert.strictEqual(txObjEnter.logs.length, 1);
                 checkEntryLog(txObjEnter.logs[0], vehicle1, booth1, hashed1, 
-                    toBN(multiplier0).toString(10), paymentDeposit.toString(10));
+                    toBN(multiplier1).toString(10), paymentDeposit.toString(10));
             });
 
             it("scenario 1", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier  
-                // Route price = entry minimum = payment deposit = deposit0 * multiplier
+                // Route price = entry minimum = payment deposit = deposit * multiplier
                 // ==> base route price = base deposit
                 // No refund.
 
                 // Set base route price.
-                const baseRoutePrice = toBN(deposit0);
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const baseRoutePrice = toBN(deposit);
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 1);
                 assert.strictEqual(txObjRoutePrice.logs.length, 1);
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));
                     
                 const vehBalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
                 
                 // Vehicle exit.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -138,7 +132,7 @@ contract("Scenarios", function(accounts) {
 
                 // Check that contract balance has not changed.
                 const vehBalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(vehBalBefore.toString(10), vehBalAfter.toString(10), "Vehicle received some form of refund.");
                 assert.strictEqual(ownerBalBefore.toString(10), ownerBalAfter.sub(paymentDeposit).toString(10), 
@@ -146,24 +140,24 @@ contract("Scenarios", function(accounts) {
             });
 
             it("scenario 2", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier
                 // Route price > payment deposit             
-                // Payment deposit = entry minimum = deposit0 * multiplier
+                // Payment deposit = entry minimum = deposit * multiplier
                 // ==> base route price > base deposit
                 // No refund.
 
                 // Set base route price.
-                const baseRoutePrice = toBN(deposit0 + 1);
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const baseRoutePrice = toBN(deposit + 1);
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 1);
                 assert.strictEqual(txObjRoutePrice.logs.length, 1);
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));
                 
                 const vehBalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
                         
                 // Vehicle exit.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -177,7 +171,7 @@ contract("Scenarios", function(accounts) {
 
                 // Check that contract balance has not changed.
                 const vehBalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(vehBalBefore.toString(10), vehBalAfter.toString(10), "Vehicle received some form of refund.");
                 assert.strictEqual(ownerBalBefore.toString(10), ownerBalAfter.sub(paymentDeposit).toString(10),
@@ -185,27 +179,27 @@ contract("Scenarios", function(accounts) {
             });
 
             it("scenario 3", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier
-                // Route price < entry minimum = deposit0 * multiplier
+                // Route price < entry minimum = deposit * multiplier
                 // Payment deposit = entry minimum
                 // ==> base route price < base deposit
                 // Refund extra payment deposit.
 
-                const baseRoutePrice = toBN(deposit0 - 1);
-                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier0));
+                const baseRoutePrice = toBN(deposit - 1);
+                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier1));
                 const expectedRefund = paymentDeposit.sub(expectedRoutePrice);
 
                 // Set base route price.
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 1);
                 assert.strictEqual(txObjRoutePrice.logs.length, 1);
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));
                 
                 const vehBalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
                         
                 // Vehicle exit.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -220,7 +214,7 @@ contract("Scenarios", function(accounts) {
 
                 // Check that contract balance has changed correctly.
                 const vehBalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(vehBalBefore.toString(10), vehBalAfter.sub(expectedRefund).toString(10),
                     "Vehicle's contract balance incorrect.");
@@ -232,7 +226,7 @@ contract("Scenarios", function(accounts) {
         describe("Tests where vehicle/first vehicle enters with paid deposit more than minimum required.", function() {
             let paymentDeposit;
             beforeEach("Set up first vehicle's entry.", async function() {
-                paymentDeposit = toBN((deposit0 + 10) * multiplier0);
+                paymentDeposit = toBN((deposit + 10) * multiplier1);
 
                 // Vehicle entry.
                 const successEnterRoad = await operator.enterRoad.call(
@@ -243,31 +237,31 @@ contract("Scenarios", function(accounts) {
                 assert.strictEqual(txObjEnter.receipt.logs.length, 1);
                 assert.strictEqual(txObjEnter.logs.length, 1);
                 checkEntryLog(txObjEnter.logs[0], vehicle1, booth1, hashed1, 
-                    toBN(multiplier0).toString(10), paymentDeposit.toString(10));
+                    toBN(multiplier1).toString(10), paymentDeposit.toString(10));
             });
 
             it("scenario 4", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier
-                // Route price = entry minimum = deposit0 * multiplier
+                // Route price = entry minimum = deposit * multiplier
                 // ==> base route price = base deposit
                 // Payment deposit > Route price
                 // Refund extra payment deposit.
 
-                const baseRoutePrice = toBN(deposit0);
-                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier0));
+                const baseRoutePrice = toBN(deposit);
+                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier1));
                 const expectedRefund = paymentDeposit.sub(expectedRoutePrice);
 
                 // Set base route price.
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 1);
                 assert.strictEqual(txObjRoutePrice.logs.length, 1);
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));
                         
                 const vehBalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
 
                 // Vehicle exit.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -282,7 +276,7 @@ contract("Scenarios", function(accounts) {
 
                 // Check that contract balance has changed correctly.
                 const vehBalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(vehBalBefore.toString(10), vehBalAfter.sub(expectedRefund).toString(10), 
                     "Vehicle's contract balance incorrect.");
@@ -291,15 +285,15 @@ contract("Scenarios", function(accounts) {
             });
 
             it("scenario 5", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier
                 // Route price unknown.
-                // Payment deposit > entry minimum = deposit0 * multiplier
+                // Payment deposit > entry minimum = deposit * multiplier
                 // Update: Route price < payment deposit
                 // Refund extra payment deposit.
 
                 const vehBalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
 
                 // Vehicle exit. Status = 2 for pending payment.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -312,24 +306,24 @@ contract("Scenarios", function(accounts) {
                 checkPendingLog(txObjPending.logs[0], hashed1, booth1, booth2);
 
                 // Set base route price.
-                const baseRoutePrice = toBN(deposit0 + 3);
-                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier0));
+                const baseRoutePrice = toBN(deposit + 3);
+                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier1));
                 const expectedRefund = paymentDeposit.sub(expectedRoutePrice);
 
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 2);
                 assert.strictEqual(txObjRoutePrice.logs.length, 2);
 
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));
 
                 checkExitLog(txObjRoutePrice.logs[1], booth2, hashed1, 
                         expectedRoutePrice.toString(10), expectedRefund.toString(10));
 
                 // Check that contract balance has changed correctly.
                 const vehBalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(vehBalBefore.toString(10), vehBalAfter.sub(expectedRefund).toString(10), 
                     "Vehicle's contract balance incorrect.");
@@ -338,25 +332,26 @@ contract("Scenarios", function(accounts) {
             });
 
             it("scenario 6", async function() {
-                // Toll operator base deposit = deposit0
+                // Toll operator base deposit = deposit
                 // Route price = base route price * multiplier
                 // Route price unknown.
-                // Veh 1: Payment deposit > entry minimum = deposit0 * multiplier
-                // Veh 2: Payment deposit = entry minimum = deposit0 * multiplier
+                // Veh 1: Payment deposit > entry minimum = deposit * multiplier2
+                // Veh 2: Payment deposit = entry minimum = deposit * multiplier2
                 // Update: Route price < entry minimum
-                // ==> base route price < deposit0
+                // ==> base route price < deposit
                 // Veh 1 gets refunded first.
                 // Call to clear payment. Veh 2 gets refunded.
 
-                const paymentDeposit2 = toBN(deposit0 * multiplier0);
-                const baseRoutePrice = toBN(deposit0 - 1);
-                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier0));
+                const paymentDeposit2 = toBN(deposit * multiplier2);
+                const baseRoutePrice = toBN(deposit - 1);
+                const expectedRoutePrice = baseRoutePrice.mul(toBN(multiplier1));
+                const expectedRoutePrice2 = baseRoutePrice.mul(toBN(multiplier2));
                 const expectedRefund = paymentDeposit.sub(expectedRoutePrice);
-                const expectedRefund2 = paymentDeposit2.sub(expectedRoutePrice);
+                const expectedRefund2 = paymentDeposit2.sub(expectedRoutePrice2);
 
                 const veh1BalBefore = await operator.getPayment.call(vehicle1, { from: vehicle1 });
                 const veh2BalBefore = await operator.getPayment.call(vehicle2, { from: vehicle2 });
-                const ownerBalBefore = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalBefore = await operator.getPayment.call(owner2, { from: owner2 });
 
                 // Vehicle 1 exit. Status = 2 for pending payment.
                 const result = await operator.reportExitRoad.call(secret1, { from: booth2 });
@@ -378,7 +373,7 @@ contract("Scenarios", function(accounts) {
                 assert.strictEqual(txObjEnter2.receipt.logs.length, 1);
                 assert.strictEqual(txObjEnter2.logs.length, 1);
                 checkEntryLog(txObjEnter2.logs[0], vehicle2, booth1, hashed2, 
-                    toBN(multiplier0).toString(10), paymentDeposit2.toString(10));
+                    toBN(multiplier2).toString(10), paymentDeposit2.toString(10));
 
                 // Vehicle 2 exit. Status = 2 for pending payment.
                 const result2 = await operator.reportExitRoad.call(secret2, { from: booth2 });
@@ -391,14 +386,14 @@ contract("Scenarios", function(accounts) {
                 checkPendingLog(txObjPending2.logs[0], hashed2, booth1, booth2);
 
                 // Set base route price.
-                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const successRoutePrice = await operator.setRoutePrice.call(booth1, booth2, baseRoutePrice, { from: owner2 });
                 assert.isTrue(successRoutePrice);
-                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner1 });
+                const txObjRoutePrice = await operator.setRoutePrice(booth1, booth2, baseRoutePrice, { from: owner2 });
                 
                 assert.strictEqual(txObjRoutePrice.receipt.logs.length, 2);
                 assert.strictEqual(txObjRoutePrice.logs.length, 2);
 
-                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner1, booth1, booth2, baseRoutePrice.toString(10));               
+                checkSetRoutePriceLog(txObjRoutePrice.logs[0], owner2, booth1, booth2, baseRoutePrice.toString(10));               
 
                 // check vehicle 1's pending payment is cleared.
                 checkExitLog(txObjRoutePrice.logs[1], booth2, hashed1, 
@@ -419,19 +414,19 @@ contract("Scenarios", function(accounts) {
 
                 // Check that the payment clearing is logged correctly.
                 checkExitLog(txObjClear.logs[0], booth2, hashed2,
-                    expectedRoutePrice.toString(10), expectedRefund2.toString(10));
+                    expectedRoutePrice2.toString(10), expectedRefund2.toString(10));
 
                 // Check that contract balances have changed correctly.
                 const veh1BalAfter = await operator.getPayment.call(vehicle1, { from: vehicle1 });
                 const veh2BalAfter = await operator.getPayment.call(vehicle2, { from: vehicle2 });
-                const ownerBalAfter = await operator.getPayment.call(owner1, { from: owner1 });
+                const ownerBalAfter = await operator.getPayment.call(owner2, { from: owner2 });
 
                 assert.strictEqual(veh1BalBefore.toString(10), veh1BalAfter.sub(expectedRefund).toString(10),
                     "Vehicle 1's contract balance incorrect.");
                 assert.strictEqual(veh2BalBefore.toString(10), veh2BalAfter.sub(expectedRefund2).toString(10),
                     "Vehicle 2's contract balance incorrect.");
                 assert.strictEqual(ownerBalBefore.toString(10), 
-                    ownerBalAfter.sub(expectedRoutePrice).sub(expectedRoutePrice).toString(10),
+                    ownerBalAfter.sub(expectedRoutePrice).sub(expectedRoutePrice2).toString(10),
                     "Operator's contract balance incorrect.");
             });
         });
