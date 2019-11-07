@@ -75,10 +75,10 @@ const exitTollBoothTableBuilder = async function (logs, thisExitBoothAddr) {
     try{
         $("#reExitTable").empty();
         $('#reExitTableTitle').empty();
-        $('#reExitTableTitle').append('<h2 class="font-weight-bold">Exit History At This Booth</h2><br>');
+        $('#reExitTableTitle').append('<h2 class="font-weight-bold">Exit History Of This Vehicle At This Booth</h2><br>');
         $("#rePendingTable").empty();
         $('#rePendingTableTitle').empty();
-        $('#rePendingTableTitle').append('<h2 class="font-weight-bold">Pending Payments At This Booth</h2><br>');
+        $('#rePendingTableTitle').append('<h2 class="font-weight-bold">Pending Payments Of This Vehicle At This Booth</h2><br>');
 
         //  exit table header row
         let header = $("<thead>");
