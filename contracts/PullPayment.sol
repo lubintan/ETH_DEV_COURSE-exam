@@ -14,8 +14,7 @@ contract PullPayment is PullPaymentA {
     function asyncPayTo(address whom, uint amount)
         internal
     {
-        (bool success, ) = whom.call.value(amount)("");
-        require(success, "Fund transfer failed.");
+        balances[whom] = balances[whom].add(amount);
     }
 
     function withdrawPayment()
@@ -28,7 +27,8 @@ contract PullPayment is PullPaymentA {
         balances[msg.sender] = 0;
         emit LogPaymentWithdrawn(msg.sender, amount);
 
-        asyncPayTo(msg.sender, amount);
+        (bool transferSuccess, ) = msg.sender.call.value(amount)("");
+        require(transferSuccess, "Fund transfer failed.");
 
         success = true;
     }

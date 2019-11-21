@@ -141,11 +141,11 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
         } else {
             if (fee >= paidDeposit){
                 vehEntryMap[exitSecretHashed].depositedWeis = 0;
-                balances[owner] = balances[owner].add(paidDeposit);
+                asyncPayTo(owner, paidDeposit);
                 emit LogRoadExited(msg.sender, exitSecretHashed, paidDeposit, 0);
             } else { // (fee < paidDeposit) {
-                balances[vehicle] = balances[vehicle].add(paidDeposit.sub(fee));
-                balances[owner] = balances[owner].add(fee);
+                asyncPayTo(vehicle, paidDeposit.sub(fee));
+                asyncPayTo(owner, fee);
                 emit LogRoadExited(msg.sender, exitSecretHashed, fee, paidDeposit.sub(fee));
             }
 
@@ -237,12 +237,12 @@ contract TollBoothOperator is   Owned, Pausable, DepositHolder, MultiplierHolder
 
             if (fee >= paidDeposit){
                 vehEntryMap[exitSecretHashed].depositedWeis = 0;
-                balances[owner] = balances[owner].add(paidDeposit);
+                asyncPayTo(owner, paidDeposit);
                 emit LogRoadExited(exit, exitSecretHashed, paidDeposit, 0);
             } else { // (fee < paidDeposit) {
                 address vehicle = vehEntryMap[exitSecretHashed].vehicle;
-                balances[vehicle] = balances[vehicle].add(paidDeposit.sub(fee));
-                balances[owner] = balances[owner].add(fee);
+                asyncPayTo(vehicle, paidDeposit.sub(fee));
+                asyncPayTo(owner, fee);
                 emit LogRoadExited(exit, exitSecretHashed, fee, paidDeposit.sub(fee));
             }
 
