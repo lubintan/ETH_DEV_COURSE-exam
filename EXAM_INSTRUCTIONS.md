@@ -1,4 +1,3 @@
-# Step 2
 
 ## Intro
 
