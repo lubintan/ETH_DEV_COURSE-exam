@@ -34,7 +34,7 @@
     "webpack": "2.2.1",
     "webpack-dev-server": "2.3.0",
     "bluebird": "3.5.0",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "truffle-contract": "4.0.27",
     "web3": "1.2.2",
     "bootstrap": "4.0.0"
